@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Lexend_Deca } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 import { ThirdwebProvider } from "thirdweb/react";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"] });
+const font = Lexend_Deca({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "thirdweb SDK + Next starter",
+  title: "MintMate",
   description:
-    "Starter template for using thirdweb SDK with Next.js App router",
+    "On MintMate, the process is celebrated—every brushstroke, every note, every line of code. It&nbsp;s all part of the journey.",
 };
 
 export default function RootLayout({
@@ -18,8 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <ThirdwebProvider>{children}</ThirdwebProvider>
+      <body className={font.className}>
+        <ThirdwebProvider>
+          <Navbar />
+          {children}
+          <Toaster />
+        </ThirdwebProvider>
       </body>
     </html>
   );
