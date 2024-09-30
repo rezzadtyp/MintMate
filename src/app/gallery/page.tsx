@@ -34,8 +34,8 @@ const GalleryPage = () => {
         <div>{error}</div>
       ) : nfts && !isLoading ? (
         <div className="grid grid-flow-col grid-cols-4 w-full gap-4 justify-center">
-          {nfts.result.map((nft) => (
-            <div className="col-span-1">
+          {nfts.result.map((nft, index) => (
+            <div className="col-span-1" key={index}>
               <NFTCard nft={nft} key={nft.token_id} />
             </div>
           ))}
