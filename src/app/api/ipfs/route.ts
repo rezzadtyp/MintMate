@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import * as dotenv from "dotenv";
 import { ThirdwebStorage } from "@thirdweb-dev/storage";
 import { client } from "@/app/client";
-import cloudinary from "cloudinary";
+import { put } from "@vercel/blob";
 
 dotenv.config();
 
@@ -11,22 +11,14 @@ const storage = new ThirdwebStorage({
   secretKey: client.secretKey,
 });
 
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET,
-  timeout: 120000,
-  logging: true,
-});
-
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
 
     const name = formData.get("name");
     const description = formData.get("description");
-    const imageFile = formData.get("image");
     const address = formData.get("address");
+    const imageFile = formData.get("image") as unknown as File;
 
     if (!name || !description || !imageFile || !address) {
       return NextResponse.json({
@@ -41,40 +33,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Step 1: Convert image file to path
-    const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.v2.uploader.upload_stream(
-          {
-            folder: "mintmate",
-            allowed_formats: ["jpeg", "png", "jpg"],
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else if (result && result.secure_url) {
-              resolve(result.secure_url);
-            } else {
-              reject(
-                new Error("Cloudinary upload failed: secure_url not found")
-              );
-            }
-          }
-        );
-
-        uploadStream.end(buffer);
-      });
-    };
-
-    const cloudinaryUrl = await uploadToCloudinary(buffer);
-
-    if (!cloudinaryUrl) {
-      throw new Error("Failed to upload image to Cloudinary");
-    }
+    // Step 1: Convert image file to blob
+    const { url: blob_url } = await put(imageFile.name, imageFile, {
+      access: "public",
+      token: process.env.mintmatetoken_READ_WRITE_TOKEN,
+    });
 
     // Step 2: Upload image to IPFS
-    const uri = await storage.upload(cloudinaryUrl);
+    const uri = await storage.upload(blob_url).catch((err) => {
+      console.error("Error uploading to IPFS:", err); // Log any IPFS upload errors
+      throw new Error("IPFS upload failed");
+    });
 
     const NFTsMetadata = {
       name: name.toString(),
