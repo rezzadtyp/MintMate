@@ -1,19 +1,18 @@
-'use client';
+"use client";
 
-import { FC } from 'react';
-import { FileWithPath, useDropzone } from 'react-dropzone';
-import { Label } from './ui/label';
+import { FC } from "react";
+import { FileWithPath, useDropzone } from "react-dropzone";
+import { Label } from "./ui/label";
 
 interface DropzoneProps {
-  label: string;
   isError: boolean;
   onDrop: (files: FileWithPath[]) => void;
 }
 
-const Dropzone: FC<DropzoneProps> = ({ isError, label, onDrop }) => {
+const Dropzone: FC<DropzoneProps> = ({ isError, onDrop }) => {
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
-      'image/*': [],
+      "image/*": [],
     },
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
@@ -23,10 +22,10 @@ const Dropzone: FC<DropzoneProps> = ({ isError, label, onDrop }) => {
 
   return (
     <div className="space-y-1.5">
-      <Label className={isError ? 'text-red-500' : ''}>{label}</Label>
+      {/* <Label className={isError ? 'text-red-500' : ''}>{label}</Label> */}
       <div
         {...getRootProps({
-          className: 'p-10 border flex justify-center rounded-md',
+          className: "p-10 border flex justify-center rounded-md h-full",
         })}
       >
         <input {...getInputProps()} />
@@ -35,9 +34,7 @@ const Dropzone: FC<DropzoneProps> = ({ isError, label, onDrop }) => {
         </Label>
       </div>
 
-      {isError && (
-        <div className="text-xs text-red-500">{label} is Required</div>
-      )}
+      {isError && <div className="text-xs text-red-500">Image is Required</div>}
     </div>
   );
 };

@@ -32,7 +32,7 @@ const PreviewImage: FC<PreviewImagesProps> = ({
         return (
           <div
             key={index}
-            className="relative h-[200px] w-[300px] rounded-md border"
+            className="relative h-[400px] w-[400px] rounded-md"
           >
             <Image
               src={images ? `${baseUrl}/${image}` : image}
@@ -42,9 +42,10 @@ const PreviewImage: FC<PreviewImagesProps> = ({
             />
 
             <Button
-              variant="ghost"
+              variant="destructive"
               size="icon"
-              className="absolute -right-5 -top-5"
+              className="absolute right-5 top-5"
+              type="button" // <-- This is important
               onClick={() => onRemoveImage(index)}
             >
               <Trash2 className="h-6 w-6" />

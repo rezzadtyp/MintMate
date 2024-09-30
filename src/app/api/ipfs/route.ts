@@ -4,8 +4,6 @@ import { ThirdwebStorage } from "@thirdweb-dev/storage";
 import { client } from "@/app/client";
 import fs from "fs/promises";
 import path from "path";
-import { contract } from "@/app/client";
-import { Engine } from "@thirdweb-dev/engine";
 
 dotenv.config();
 
@@ -36,6 +34,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Step 1: Convert image file to path
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     const imagePath = path.join(
       process.cwd(),
@@ -45,12 +44,8 @@ export async function POST(request: Request) {
     await fs.writeFile(imagePath, buffer);
 
     const fileData = await fs.readFile(imagePath);
+    // Step 2: Upload image to IPFS
     const uri = await storage.upload(fileData);
-
-    const engine = new Engine({
-      url: process.env.ENGINE_URL!,
-      accessToken: process.env.THIRDWEB_ENGINE_ACCESS_TOKEN!,
-    });
 
     const NFTsMetadata = {
       name: name.toString(),
@@ -58,19 +53,12 @@ export async function POST(request: Request) {
       image: uri,
     };
 
-    const response = await engine.erc721.mintTo(
-      "sepolia",
-      contract.address,
-      process.env.BACKEND_WALLET!,
-      {
-        receiver: address.toString(),
-        metadata: NFTsMetadata,
-      }
-    );
+    // Step 3: Upload NFTs Metadata then get the tokenURI
+    const tokenURI = await storage.upload(NFTsMetadata);
 
     return NextResponse.json({
-      message: "NFT Minted Successfully",
-      response,
+      message: "Image Uploaded to IPFS!",
+      tokenURI,
     });
   } catch (error) {
     console.error("Error uploading metadata:", error);

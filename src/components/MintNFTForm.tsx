@@ -17,14 +17,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useActiveAccount } from "thirdweb/react";
-import PreviewImage from "./PreviewImage";
-import Dropzone from "./Dropzone";
+import Image from "next/image";
+
+const MAX_FILE_SIZE = 1024 * 1024 * 20;
 
 // Validation schema using zod
 const mintNFTSchema = z.object({
   name: z.string().trim().min(2, { message: "Name is required" }),
   description: z.string().trim().min(5, { message: "Description is required" }),
-  image: z.array(z.any()).min(1, { message: "Please upload image" }),
+  image: z
+    .any()
+    .refine(
+      (files) => !files || files?.[0]?.size <= MAX_FILE_SIZE,
+      `Max image size is 20MB.`
+    ),
   address: z.string().min(2, { message: "Address is required" }),
 });
 
@@ -32,7 +38,9 @@ type MintNFTFormData = z.infer<typeof mintNFTSchema>;
 
 export default function MintNFTForm() {
   const { mintNFT, isLoading } = useMintNFT();
-  const [selectedImage, setSelectedImage] = useState<File[]>([]);
+  // const [selectedImage, setSelectedImage] = useState<File[]>([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+
   const activeAccount = useActiveAccount();
   const address = activeAccount?.address;
 
@@ -41,7 +49,7 @@ export default function MintNFTForm() {
     defaultValues: {
       name: "",
       description: "",
-      image: [],
+      image: undefined,
       address: "",
     },
   });
@@ -51,77 +59,107 @@ export default function MintNFTForm() {
   }
 
   const onSubmit = async (formData: MintNFTFormData) => {
-    if (activeAccount) {
-      await mintNFT({ ...formData, account: activeAccount });
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    const updatedFiles = [...selectedImage];
-    updatedFiles.splice(index, 1);
-    setSelectedImage(updatedFiles);
-    form.setValue("image", updatedFiles);
+    await mintNFT(formData);
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="NFT Name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder="NFT Description" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              {/* <FormLabel>Images</FormLabel> */}
-              <FormControl>
-                <Dropzone
-                  isError={Boolean(form.formState.errors.image)}
-                  label="Upload Images"
-                  onDrop={(files) => {
-                    setSelectedImage([...selectedImage, ...files]);
-                    field.onChange([...selectedImage, ...files]);
-                  }}
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex gap-10 w-full h-full"
+      >
+        <div className="relative w-[400px] h-[400px]">
+          <div className="mb-4 flex flex-col items-center px-20 gap-4 border rounded-lg py-4">
+            {selectedImage ? (
+              <div className="relative h-96 w-96 overflow-hidden rounded-lg">
+                <Image
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="Selected"
+                  fill
+                  className="object-cover"
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <PreviewImage
-          fileImages={selectedImage}
-          onRemoveImage={handleRemoveImage}
-        />
+              </div>
+            ) : (
+              <div className="relative h-96 w-96 overflow-hidden rounded-lg border border-dashed items-center flex">
+                <p className="mx-auto text-sm text-gray-500">Please select an Image</p>
+              </div>
+            )}
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Button
+                      type="button"
+                      className="w-full"
+                    >
+                      <input
+                        type="file"
+                        className="hidden"
+                        id="fileInput"
+                        accept="image/*"
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        onChange={(e) => {
+                          field.onChange(e.target.files);
+                          setSelectedImage(e.target.files?.[0] || null);
+                        }}
+                        ref={field.ref}
+                      />
+                      <label
+                        htmlFor="fileInput"
+                        className="text-neutral-90 inline-flex cursor-pointer items-center gap-2 rounded-md"
+                      >
+                        <span className="whitespace-nowrap">
+                          Choose your image
+                        </span>
+                      </label>
+                    </Button>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        <div className="w-full h-full space-y-8">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="NFT Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Minting..." : "Mint"}
-        </Button>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="NFT Description"
+                    {...field}
+                    className="resize-none full"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? "Minting..." : "Mint"}
+          </Button>
+        </div>
       </form>
     </Form>
   );
