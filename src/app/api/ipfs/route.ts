@@ -15,28 +15,9 @@ cloudinary.v2.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
+  timeout: 120000,
+  logging: true,
 });
-
-const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.v2.uploader.upload_stream(
-      {
-        folder: "mintmate",
-        allowed_formats: ["jpeg", "png", "jpg"],
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else if (result && result.secure_url) {
-          resolve(result.secure_url);
-        } else {
-          reject(new Error("Cloudinary upload failed: secure_url not found"));
-        }
-      }
-    );
-    uploadStream.end(buffer);
-  });
-};
 
 export async function POST(request: Request) {
   try {
@@ -62,8 +43,31 @@ export async function POST(request: Request) {
 
     // Step 1: Convert image file to path
     const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const uploadToCloudinary = (buffer: Buffer): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.v2.uploader.upload_stream(
+          {
+            folder: "mintmate",
+            allowed_formats: ["jpeg", "png", "jpg"],
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else if (result && result.secure_url) {
+              resolve(result.secure_url);
+            } else {
+              reject(
+                new Error("Cloudinary upload failed: secure_url not found")
+              );
+            }
+          }
+        );
+
+        uploadStream.end(buffer);
+      });
+    };
+
     const cloudinaryUrl = await uploadToCloudinary(buffer);
-    console.log(cloudinaryUrl);
 
     if (!cloudinaryUrl) {
       throw new Error("Failed to upload image to Cloudinary");
