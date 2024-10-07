@@ -16,16 +16,37 @@ import {
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const account = useActiveAccount();
   const router = useRouter();
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedAddress = localStorage.getItem("address");
+    if (savedAddress) {
+      setConnectedAddress(savedAddress);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (account) {
+      localStorage.setItem("address", account.address);
+      setConnectedAddress(account.address);
+    }
+  }, [account]);
+
+  const handleDisconnect = () => {
+    localStorage.removeItem("address");
+    setConnectedAddress(null);
+  };
 
   return (
-    <div className="flex justify-between items-center px-10 py-4">
+    <div className="flex justify-between items-center px-10 py-4 border-b">
       <div className="flex gap-8 items-center">
         <Link href={"/"}>
-          <p className="font-semibold text-xl">MNMT</p>
+          <p className="font-bold text-xl">MNMT</p>
         </Link>
         <Button
           variant="link"
@@ -36,10 +57,13 @@ const Navbar = () => {
         </Button>
       </div>
       <div className="flex gap-4 items-center">
-        {account ? (
+        {connectedAddress ? (
           <>
             <Button variant="link" onClick={() => router.push("/mint/nft")}>
               Mint
+            </Button>
+            <Button variant="link" onClick={() => router.push("/account")}>
+              Profile
             </Button>
             <ConnectButton
               client={client}
@@ -48,25 +72,40 @@ const Navbar = () => {
                 url: "https://mintmate.com",
               }}
               detailsButton={{
-                className: "rounded-full",
+                className: "rounded-none",
                 displayBalanceToken: {
-                  [client.clientId]: account.address,
+                  [client.clientId]: connectedAddress,
                 },
               }}
               theme={lightTheme()}
+              onDisconnect={handleDisconnect}
+              autoConnect={true}
             />
           </>
         ) : (
           <>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="rounded-full h-auto px-8 py-[13px]">
+                <Button
+                  className="rounded-none h-auto px-8 py-[13px]"
+                  variant="outline"
+                >
                   Connect
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <ConnectEmbed client={client} theme={lightTheme()} />
+              <DialogContent className="p-2 bg-none border-none w-fit rounded-sm">
+                <DialogHeader className="rounded-sm">
+                  <ConnectEmbed
+                    client={client}
+                    theme={lightTheme()}
+                    appMetadata={{
+                      name: "MintMate",
+                      description:
+                        "On MintMate, the process is celebrated—every brushstroke, every note, every line of code. It&nbsp;s all part of the journey.",
+                    }}
+                    className="rounded-sm"
+                    autoConnect={true}
+                  />
                 </DialogHeader>
               </DialogContent>
             </Dialog>

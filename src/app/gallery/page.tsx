@@ -13,35 +13,48 @@ const GalleryPage = () => {
   }, []);
 
   return (
-    <div className="container mx-auto flex flex-col gap-8">
+    <div className="container min-h-screen mx-auto flex flex-col gap-8">
       <h1 className="text-5xl pt-10 font-semibold">Gallery</h1>
       {isLoading ? (
-        <div className="grid grid-flow-col grid-cols-4 w-full gap-4 justify-center">
-          <div className="col-span-1">
+        <div className="grid grid-cols-4 w-full gap-4 justify-center">
+          <div className="">
             <NFTCardSkeleton />
           </div>
-          <div className="col-span-1">
+          <div className="">
             <NFTCardSkeleton />
           </div>
-          <div className="col-span-1">
+          <div className="">
             <NFTCardSkeleton />
           </div>
-          <div className="col-span-1">
+          <div className="">
             <NFTCardSkeleton />
           </div>
         </div>
       ) : error ? (
         <div>{error}</div>
       ) : nfts && !isLoading ? (
-        <div className="grid grid-flow-col grid-cols-4 w-full gap-4 justify-center">
+        <div className="grid grid-cols-4 w-full gap-4 justify-center">
           {nfts.result.map((nft, index) => (
-            <div className="col-span-1" key={index}>
+            <div className="" key={index}>
               <NFTCard nft={nft} key={nft.token_id} />
             </div>
           ))}
         </div>
       ) : (
-        <div>No NFTs found.</div>
+        <div className="grid grid-cols-4 w-full gap-4 justify-center">
+          <div className="">
+            <NFTCardSkeleton />
+          </div>
+          <div className="">
+            <NFTCardSkeleton />
+          </div>
+          <div className="">
+            <NFTCardSkeleton />
+          </div>
+          <div className="">
+            <NFTCardSkeleton />
+          </div>
+        </div>
       )}
     </div>
   );

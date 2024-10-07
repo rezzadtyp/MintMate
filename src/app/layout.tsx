@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Lexend_Deca } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ThirdwebProvider } from "thirdweb/react";
 import { Toaster } from "@/components/ui/sonner";
+import Footer from "@/components/Footer";
 
-const font = Lexend_Deca({ subsets: ["latin"] });
+const font = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "MintMate",
@@ -24,6 +25,7 @@ export default function RootLayout({
         <ThirdwebProvider>
           <Navbar />
           {children}
+          <Footer />
           <Toaster />
         </ThirdwebProvider>
       </body>

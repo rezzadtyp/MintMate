@@ -1,3 +1,12 @@
+export interface NormalizedMetadata {
+  name: string;
+  description: string;
+  animation_url: string | null;
+  external_link: string | null;
+  image: string;
+  attributes: any[];
+}
+
 export default interface NFT {
   token_address: string;
   token_id: string;
@@ -22,6 +31,9 @@ export default interface NFT {
   floor_price: number | null;
   floor_price_usd: number | null;
   floor_price_currency: string | null;
+  normalized_metadata: NormalizedMetadata;
+  collection_logo: string | null;
+  collection_banner_image: string | null;
 }
 
 // Define the type for the overall response structure
@@ -30,4 +42,5 @@ export default interface GalleryResponse {
   page: number;
   page_size: number;
   result: NFT[];
+  status?: string;
 }
